@@ -39,5 +39,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "cspell": "^6.18.1",
+    "husky": "^8.0.2",
+    "lint-staged": "^13.1.0"
   }
 }
