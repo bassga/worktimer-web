@@ -1,24 +1,41 @@
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import 'src/App.css'
-import logo from 'src/logo.svg'
+import { AuthProvider } from 'src/context/AuthContext'
+import SignUp from 'src/context/SignUp'
+import { NotFound } from 'src/routes/NotFound'
+import PrivateRoute from 'src/routes/PrivateRoute'
+import PublicRoute from 'src/routes/PublicRoute'
+import Home from './components/Home'
+import Login from './context/Login'
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AuthProvider>
+      <div style={{ margin: '2em' }}>
+        <BrowserRouter>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <PrivateRoute>
+                  <Home />
+                </PrivateRoute>
+              }
+            />
+            <Route path="/signup" element={<SignUp />} />
+            <Route
+              path="/login"
+              element={
+                <PublicRoute>
+                  <Login />
+                </PublicRoute>
+              }
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </div>
+    </AuthProvider>
   )
 }
 
