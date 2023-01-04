@@ -12,43 +12,35 @@ import { useNavigate } from 'react-router-dom'
 import { getFirebaseAuth } from 'src/firebase'
 import BreakTime from 'src/models/BreakTime'
 import WorkTime from 'src/models/WorkTime'
+import { RestStatus } from '../models/Type/RestStatus'
+import { WorkStatus } from '../models/Type/WorkStatus'
 const Home = () => {
   const auth = getAuth()
   const user = (auth.currentUser as User)?.uid
   const today: string = new Date().toLocaleDateString().replaceAll('/', '-')
 
-  console.dir(today)
   const navigation = useNavigate()
   const [buttonText, setButtonText] = useState('出勤')
   const [buttonColor, setButtonColor] = useState('primary')
-  // const buttonColor = isWorking ? 'danger' : 'primary'
 
   // 退勤済みか
   const [isWorkFinish, setWorkFinishStatus] = useState(false)
   const testBreakItem: BreakTime = {
-    breakStart: new Date(),
+    breakStart: null,
     breakEnd: null,
   }
 
-  const testWorkTime: WorkTime = {
-    startTime: '',
-    endTime: '',
-    restTimeList: [testBreakItem],
-  }
-
-  const [todaysWorkData, setTodaysWorkData] = useState(testWorkTime)
+  const [todaysWorkData, setTodaysWorkData] = useState(null as WorkTime)
   useEffect(() => {
     const fetchResult = async () => {
       const todayData: WorkTime = (await getDoc(docRef)).get(today) ?? null
       setTodaysWorkData(todayData)
-      console.dir(today)
       if (todayData) {
         if (todayData.endTime) {
           setWorkFinishStatus(true)
           return
         }
         if (todayData.startTime) {
-          console.dir('start is exist')
           setButtonText('退勤')
           setButtonColor('danger')
         }
@@ -56,11 +48,9 @@ const Home = () => {
     }
     fetchResult()
   }, [isWorkFinish, buttonText, buttonColor])
-  console.dir(todaysWorkData)
 
   const db = getFirestore()
   const docRef = doc(db, 'users', user)
-  console.dir(docRef)
 
   const handleLogout = () => {
     signOut(getFirebaseAuth())
@@ -68,18 +58,29 @@ const Home = () => {
   }
   const timeCard = async (event: React.MouseEvent) => {
     event.preventDefault()
-    console.dir(todaysWorkData)
-    if (todaysWorkData.startTime) {
-      console.dir(todaysWorkData.endTime)
-      todaysWorkData.endTime = String(new Date())
-      console.dir(todaysWorkData)
-      updateDoc(docRef, { [today]: todaysWorkData }).then(() => {
+    if (todaysWorkData) {
+      // 退勤
+      todaysWorkData.endTime = new Date()
+      const endWork: WorkTime = {
+        startTime: todaysWorkData.startTime,
+        endTime: new Date(),
+        restTimeList: todaysWorkData.restTimeList,
+        restStatus: RestStatus.HOME,
+        workStatus: WorkStatus.HOME,
+      }
+      updateDoc(docRef, { [today]: endWork }).then(() => {
         window.location.reload()
       })
     } else {
-      todaysWorkData.startTime = String(new Date())
-      setDoc(docRef, { [today]: todaysWorkData }).then(() => {
-        console.dir('success')
+      // 出勤
+      const startWork: WorkTime = {
+        startTime: new Date(),
+        endTime: null,
+        restTimeList: [],
+        restStatus: RestStatus.WORKING,
+        workStatus: WorkStatus.WORKING,
+      }
+      setDoc(docRef, { [today]: startWork }).then(() => {
         window.location.reload()
       })
     }

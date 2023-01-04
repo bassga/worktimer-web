@@ -1,5 +1,5 @@
 type BreakTime = {
-  breakStart: Date
+  breakStart: Date | null
   breakEnd: Date | null
 }
 
