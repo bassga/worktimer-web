@@ -26,54 +26,58 @@ const Home = () => {
   const [restButtonEnable, setRestButtonEnable] = useState(false)
 
   const [todaysWorkData, setTodaysWorkData] = useState(null as WorkTime)
+
   useEffect(() => {
+    // 初回実行関数
     const fetchResult = async () => {
       const todayData: WorkTime = (await getDoc(docRef)).get(today) ?? null
       setTodaysWorkData(todayData)
-
-      if (todayData) {
-        switch (todayData.workStatus) {
-          case WorkStatus.BREAK_TIME:
-            // 休憩中
-            setButtonText('退勤')
-            setButtonEnable(false)
-            setButtonColor('danger')
-            setRestButtonText('休憩終了')
-            setRestButtonEnable(true)
-            setRestButtonColor('warning')
-            return
-          case WorkStatus.WORKING:
-            // 作業中
-            setButtonText('退勤')
-            setButtonEnable(true)
-            setButtonColor('danger')
-            setRestButtonText('休憩開始')
-            setRestButtonEnable(true)
-            setRestButtonColor('success')
-            return
-          case WorkStatus.GO_HOME:
-            setButtonText('退勤済み')
-            setButtonEnable(false)
-            setButtonColor('danger')
-            setRestButtonText('休憩終了')
-            setRestButtonEnable(false)
-            setRestButtonColor('warning')
-            return
-          default:
-            break
-        }
-      } else {
-        setButtonText('出勤')
-        setButtonEnable(true)
-        setButtonColor('primary')
-        setRestButtonText('休憩')
-        setRestButtonEnable(false)
-        setRestButtonColor('success')
-        return
-      }
     }
     fetchResult()
-  })
+  }, [])
+
+  useEffect(() => {
+    if (todaysWorkData) {
+      switch (todaysWorkData.workStatus) {
+        case WorkStatus.BREAK_TIME:
+          // 休憩中
+          setButtonText('退勤')
+          setButtonEnable(false)
+          setButtonColor('danger')
+          setRestButtonText('休憩終了')
+          setRestButtonEnable(true)
+          setRestButtonColor('warning')
+          return
+        case WorkStatus.WORKING:
+          // 作業中
+          setButtonText('退勤')
+          setButtonEnable(true)
+          setButtonColor('danger')
+          setRestButtonText('休憩開始')
+          setRestButtonEnable(true)
+          setRestButtonColor('success')
+          return
+        case WorkStatus.GO_HOME:
+          setButtonText('退勤済み')
+          setButtonEnable(false)
+          setButtonColor('danger')
+          setRestButtonText('休憩終了')
+          setRestButtonEnable(false)
+          setRestButtonColor('warning')
+          return
+        default:
+          break
+      }
+    } else {
+      setButtonText('出勤')
+      setButtonEnable(true)
+      setButtonColor('primary')
+      setRestButtonText('休憩')
+      setRestButtonEnable(false)
+      setRestButtonColor('success')
+      return
+    }
+  }, [todaysWorkData])
 
   const db = getFirestore()
   const docRef = doc(db, 'users', user)
