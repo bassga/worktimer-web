@@ -1,86 +1,39 @@
 import { getAuth, signOut, User } from 'firebase/auth'
-import {
-  doc,
-  getDoc,
-  getFirestore,
-  setDoc,
-  updateDoc,
-} from 'firebase/firestore'
-import React, { useEffect, useState } from 'react'
+import { doc, getFirestore, setDoc, updateDoc } from 'firebase/firestore'
+import React, { useEffect, useReducer } from 'react'
 import { Button } from 'react-bootstrap'
 import { useNavigate } from 'react-router-dom'
 import { getFirebaseAuth } from 'src/firebase'
 import WorkTime from 'src/models/WorkTime'
+import TodaysWorkDataAPI from 'src/TodaysWorkDataAPI'
 import { WorkStatus } from '../models/Type/WorkStatus'
+import {
+  initButtonStatus,
+  workButtonReducer,
+} from '../Reducer/workButtonReducer'
+
 const Home = () => {
   const auth = getAuth()
   const user = (auth.currentUser as User)?.uid
-  const today: string = new Date().toLocaleDateString().replaceAll('/', '-')
-
+  const date = new Date()
+  const today = date.toLocaleDateString().replaceAll('/', '-')
+  const yearMonth = `${String(date.getFullYear())}-${String(
+    date.getMonth() + 1,
+  )}`
   const navigation = useNavigate()
-  const [buttonText, setButtonText] = useState('出勤')
-  const [buttonColor, setButtonColor] = useState('primary')
-  const [buttonEnable, setButtonEnable] = useState(true)
-  const [restButtonText, setRestButtonText] = useState('休憩')
-  const [restButtonColor, setRestButtonColor] = useState('success')
-  const [restButtonEnable, setRestButtonEnable] = useState(false)
+  const { todaysWorkData } = TodaysWorkDataAPI()
 
-  const [todaysWorkData, setTodaysWorkData] = useState(null as WorkTime)
+  const [workButtonStatus, workButtonDispatch] = useReducer(
+    workButtonReducer,
+    initButtonStatus,
+  )
 
   useEffect(() => {
-    // 初回実行関数
-    const fetchResult = async () => {
-      const todayData: WorkTime = (await getDoc(docRef)).get(today) ?? null
-      setTodaysWorkData(todayData)
-    }
-    fetchResult()
-  }, [])
-
-  useEffect(() => {
-    if (todaysWorkData) {
-      switch (todaysWorkData.workStatus) {
-        case WorkStatus.BREAK_TIME:
-          // 休憩中
-          setButtonText('退勤')
-          setButtonEnable(false)
-          setButtonColor('danger')
-          setRestButtonText('休憩終了')
-          setRestButtonEnable(true)
-          setRestButtonColor('warning')
-          return
-        case WorkStatus.WORKING:
-          // 作業中
-          setButtonText('退勤')
-          setButtonEnable(true)
-          setButtonColor('danger')
-          setRestButtonText('休憩開始')
-          setRestButtonEnable(true)
-          setRestButtonColor('success')
-          return
-        case WorkStatus.GO_HOME:
-          setButtonText('退勤済み')
-          setButtonEnable(false)
-          setButtonColor('danger')
-          setRestButtonText('休憩終了')
-          setRestButtonEnable(false)
-          setRestButtonColor('warning')
-          return
-        default:
-          break
-      }
-    } else {
-      setButtonText('出勤')
-      setButtonEnable(true)
-      setButtonColor('primary')
-      setRestButtonText('休憩')
-      setRestButtonEnable(false)
-      setRestButtonColor('success')
-      return
-    }
+    workButtonDispatch(todaysWorkData?.workStatus)
   }, [todaysWorkData])
 
   const db = getFirestore()
-  const docRef = doc(db, 'users', user)
+  const docRef = doc(db, 'users', user, yearMonth, today)
 
   const handleLogout = () => {
     signOut(getFirebaseAuth())
@@ -108,6 +61,7 @@ const Home = () => {
         restTimeList: [],
         workStatus: WorkStatus.WORKING,
       }
+
       setDoc(docRef, { [today]: startWork }).then(() => {
         window.location.reload()
       })
@@ -157,18 +111,18 @@ const Home = () => {
     <React.Fragment>
       <div> Home Component</div>
       <Button
-        variant={buttonColor}
-        disabled={!buttonEnable}
+        variant={workButtonStatus.workButtonColor}
+        disabled={!workButtonStatus.workButtonEnable}
         onClick={(event) => timeCard(event)}
       >
-        {buttonText}
+        {workButtonStatus.workButtonText}
       </Button>
       <Button
-        disabled={!restButtonEnable}
+        disabled={!workButtonStatus.restButtonEnable}
         onClick={handleRest}
-        variant={restButtonColor}
+        variant={workButtonStatus.restButtonColor}
       >
-        {restButtonText}
+        {workButtonStatus.restButtonText}
       </Button>
       <Button onClick={handleLogout} variant="secondary">
         ログアウト
