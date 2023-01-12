@@ -1,5 +1,5 @@
 import BreakTime from 'src/models/BreakTime'
-import { WorkStatus } from './Type/WorkStatus'
+import { WorkStatus } from 'src/models/Type/WorkStatus'
 
 type WorkTime = {
   startTime: Date | null

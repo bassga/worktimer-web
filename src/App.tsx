@@ -6,6 +6,7 @@ import { NotFound } from 'src/routes/NotFound'
 import PrivateRoute from 'src/routes/PrivateRoute'
 import PublicRoute from 'src/routes/PublicRoute'
 import Home from './components/Home'
+import WorkSchedule from './components/WorkSchedule'
 import Login from './context/Login'
 
 function App() {
@@ -22,6 +23,15 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route
+              path="/workschedule"
+              element={
+                <PrivateRoute>
+                  <WorkSchedule />
+                </PrivateRoute>
+              }
+            />
+
             <Route path="/signup" element={<SignUp />} />
             <Route
               path="/login"
